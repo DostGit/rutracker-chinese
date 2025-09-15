@@ -12,71 +12,86 @@ export function init(options) {
   floatBtn.addEventListener('mouseenter', () => { floatBtn.style.transform = 'scale(1.1)'; floatBtn.style.background = '#3a6390'; });
   floatBtn.addEventListener('mouseleave', () => { floatBtn.style.transform = 'scale(1)'; floatBtn.style.background = '#4a76a8'; });
 
-  const panel = document.createElement('div');
-  panel.id = 'rutracker-translation-panel';
+  const panel = document.createElement("div");
+  let isPinned = false;
+  panel.id = "rutracker-translation-panel";
   panel.style.cssText = `position: fixed; top: 160px; right: 20px; width: 350px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 15px; z-index: 9998; display: none; font-family: Arial, sans-serif; max-height: 80vh; overflow-y: auto;`;
-
   panel.innerHTML = `
-            <h3 style="margin-top: 0; color: #4a76a8; border-bottom: 1px solid #eee; padding-bottom: 10px;">添加自定义翻译</h3>
-            <div style="margin-bottom: 10px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">原文:</label>
-                <input type="text" id="custom-translation-original" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">译文:</label>
-                <input type="text" id="custom-translation-translated" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <button id="add-custom-translation" style="background: #4a76a8; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">添加翻译</button>
-            <div id="translation-feedback" style="margin-top: 10px; padding: 8px; border-radius: 4px; display: none;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <h3 style="margin: 0; color: #4a76a8;">添加自定义翻译</h3>
+              <button id="pin-panel" style="background: transparent; border: none; cursor: pointer; font-size: 18px;">
+                  📌
+              </button>
+          </div>
+          <h3 style="margin-top: 0; color: #4a76a8; border-bottom: 1px solid #eee; padding-bottom: 10px;">添加自定义翻译</h3>
+          <div style="margin-bottom: 10px;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">原文:</label>
+              <input type="text" id="custom-translation-original" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold;">译文:</label>
+              <input type="text" id="custom-translation-translated" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <button id="add-custom-translation" style="background: #4a76a8; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">添加翻译</button>
+          <div id="translation-feedback" style="margin-top: 10px; padding: 8px; border-radius: 4px; display: none;"></div>
 
-            <hr style="margin: 15px 0;">
+          <hr style="margin: 15px 0;">
 
-            <h4 style="margin-bottom: 10px; color: #4a76a8;">自定义翻译列表</h4>
-            <div id="custom-translations-list" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 4px;">
-                <p style="color: #999; margin: 0; text-align: center;">暂无自定义翻译</p>
-            </div>
+          <h4 style="margin-bottom: 10px; color: #4a76a8;">自定义翻译列表</h4>
+          <div id="custom-translations-list" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 4px;">
+              <p style="color: #999; margin: 0; text-align: center;">暂无自定义翻译</p>
+          </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button id="reset-custom-translations" style="background: #ff6b6b; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">重置所有翻译</button>
-                <button id="refresh-page" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">刷新页面</button>
-            </div>
+          <div style="display: flex; gap: 10px;">
+              <button id="reset-custom-translations" style="background: #ff6b6b; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">重置所有翻译</button>
+              <button id="refresh-page" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">刷新页面</button>
+          </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button id="export-custom-translations" style="background: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导出翻译</button>
-                <button id="export-all-translations" style="background: #20c997; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导出全部（内置+自定义）</button>
-                <button id="import-custom-translations-replace" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导入（替换）</button>
-                <button id="import-custom-translations-merge" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导入（合并）</button>
-            </div>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button id="export-custom-translations" style="background: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导出翻译</button>
+              <button id="export-all-translations" style="background: #20c997; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导出全部（内置+自定义）</button>
+              <button id="import-custom-translations-replace" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导入（替换）</button>
+              <button id="import-custom-translations-merge" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">导入（合并）</button>
+          </div>
 
-            <div style="font-size: 13px; color: #666; margin-top: 15px;">
-                <p><strong>提示:</strong> 添加、编辑、导入或删除翻译后会立即生效（无需刷新）。</p>
-            </div>
-        `;
-
-  document.body.appendChild(floatBtn);
+          <div style="font-size: 13px; color: #666; margin-top: 15px;">
+              <p><strong>提示:</strong> 添加、编辑、导入或删除翻译后会立即生效（无需刷新）。</p>
+          </div>
+      `;
   document.body.appendChild(panel);
+  document.getElementById('pin-panel').addEventListener('click', (e) => {
+      e.stopPropagation();
+      isPinned = !isPinned;
+      const pinBtn = document.getElementById('pin-panel');
 
+      if (isPinned) {
+          pinBtn.innerHTML = '📍';
+          pinBtn.title = '取消钉住';
+      } else {
+          pinBtn.innerHTML = '📌';
+          pinBtn.title = '钉住面板';
+      }
+  });
+  document.addEventListener('click', (e) => {
+      if (!panel.contains(e.target) && e.target !== floatBtn && !isPinned) {
+          panel.style.display = 'none';
+          resetEditState();
+      }
+  });
+  document.body.appendChild(floatBtn);
   let editingKey = null;
-
-  floatBtn.addEventListener('click', (e) => {
+  floatBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    const isVisible = panel.style.display === 'block';
-    panel.style.display = isVisible ? 'none' : 'block';
-
+    const isVisible = panel.style.display === "block";
+    panel.style.display = isVisible ? "none" : "block";
     if (!isVisible) {
       updateCustomTranslationsList();
       resetEditState();
     }
   });
-
-  document.addEventListener('click', (e) => {
-    if (!panel.contains(e.target) && e.target !== floatBtn) {
-      panel.style.display = 'none';
-      resetEditState();
-    }
+  panel.addEventListener("click", (e) => {
+    e.stopPropagation();
   });
-
-  panel.addEventListener('click', (e) => { e.stopPropagation(); });
 
   document.getElementById('add-custom-translation').addEventListener('click', () => {
     const original = document.getElementById('custom-translation-original').value.trim();
